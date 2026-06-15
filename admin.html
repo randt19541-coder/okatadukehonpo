@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実績管理 ｜ お片付け本舗松本</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif; background: #F4F6FA; color: #333; min-height: 100vh; }
+
+    /* ========== パスワードゲート ========== */
+    #gate {
+      position: fixed; inset: 0;
+      background: #1565C0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .gate-box {
+      background: #fff; border-radius: 20px; padding: 48px 40px;
+      width: 100%; max-width: 420px; text-align: center;
+      box-shadow: 0 12px 48px rgba(0,0,0,.25);
+    }
+    .gate-logo { font-size: 2.8rem; margin-bottom: 10px; }
+    .gate-title { font-size: 1.2rem; font-weight: 900; color: #1565C0; margin-bottom: 4px; }
+    .gate-sub { font-size: .85rem; color: #999; margin-bottom: 32px; }
+    .gate-box input[type="password"] {
+      width: 100%; padding: 14px 16px; border: 2px solid #E0E0E0; border-radius: 10px;
+      font-size: 1rem; font-family: inherit; margin-bottom: 12px; transition: border-color .2s;
+    }
+    .gate-box input[type="password"]:focus { outline: none; border-color: #1565C0; }
+    .gate-btn {
+      width: 100%; padding: 14px; background: #FFC107; border: none; border-radius: 50px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      color: #1a1a1a; transition: background .2s;
+    }
+    .gate-btn:hover { background: #FFB300; }
+    .gate-error { margin-top: 12px; font-size: .85rem; color: #E53935; min-height: 20px; }
+
+    /* ========== ヘッダー ========== */
+    .admin-header {
+      background: #1565C0; color: #fff; padding: 0 24px;
+      height: 60px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.2);
+    }
+    .header-logo { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 1.05rem; }
+    .badge-admin {
+      background: #FFC107; color: #1a1a1a; font-size: .7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 50px;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,.15); border: none; color: #fff; padding: 7px 16px;
+      border-radius: 50px; cursor: pointer; font-size: .85rem; font-family: inherit; transition: background .2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,.28); }
+
+    /* ========== メインレイアウト ========== */
+    .admin-body { max-width: 1100px; margin: 0 auto; padding: 28px 20px 80px; }
+
+    .home-link {
+      display: inline-flex; align-items: center; gap: 5px; color: #1565C0;
+      font-size: .875rem; font-weight: 700; text-decoration: none; margin-bottom: 20px;
+    }
+    .home-link:hover { text-decoration: underline; }
+
+    .warn-banner {
+      background: #FFF3E0; border: 1px solid #FFB74D; border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 20px; font-size: .875rem; color: #E65100; display: none;
+    }
+    .warn-banner.show { display: block; }
+
+    /* ========== サービスタブ ========== */
+    .service-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .service-tab {
+      padding: 9px 16px; border-radius: 50px; border: 2px solid #1565C0;
+      background: #fff; color: #1565C0; font-weight: 700; font-size: .875rem;
+      cursor: pointer; font-family: inherit; transition: all .2s;
+    }
+    .service-tab:hover { background: #E3F2FD; }
+    .service-tab.active { background: #1565C0; color: #fff; }
+
+    /* ========== グリッド ========== */
+    .admin-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+    @media (max-width: 860px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    /* ========== パネル共通 ========== */
+    .panel {
+      background: #fff; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+    .panel-title {
+      font-size: 1rem; font-weight: 900; color: #1565C0; margin-bottom: 16px;
+      padding-bottom: 10px; border-bottom: 2px solid #E3F2FD;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .count-badge {
+      background: #E3F2FD; color: #1565C0; font-size: .75rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 50px; white-space: nowrap;
+    }
+
+    /* ========== 実績エントリー ========== */
+    .entry-list { display: flex; flex-direction: column; gap: 12px; }
+    .entry-card {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: #F9FAFB; border-radius: 10px; padding: 12px 14px; border: 1px solid #EBEBEB;
+    }
+    .entry-thumb {
+      width: 72px; height: 72px; flex-shrink: 0; border-radius: 8px; overflow: hidden;
+      background: #E3F2FD; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+    }
+    .entry-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .entry-info { flex: 1; min-width: 0; }
+    .entry-comment { font-size: .875rem; color: #444; line-height: 1.6; margin-bottom: 5px; }
+    .entry-url { font-size: .72rem; color: #bbb; word-break: break-all; }
+    .delete-btn {
+      background: none; border: none; color: #E53935; cursor: pointer; font-size: 1.1rem;
+      padding: 4px 6px; border-radius: 6px; flex-shrink: 0; transition: background .2s;
+    }
+    .delete-btn:hover { background: #FFEBEE; }
+    .empty-state { text-align: center; color: #ccc; padding: 32px 0; font-size: .9rem; line-height: 1.8; }
+
+    /* ========== フォーム ========== */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-group label { font-weight: 700; font-size: .875rem; color: #333; }
+    .form-group input, .form-group textarea {
+      padding: 11px 14px; border: 2px solid #E0E0E0; border-radius: 10px;
+      font-size: .9rem; font-family: inherit; color: #333; background: #FAFAFA; transition: border-color .2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none; border-color: #1565C0; background: #fff;
+    }
+    .form-group textarea { min-height: 90px; resize: vertical; }
+
+    .img-preview {
+      width: 100%; height: 120px; border-radius: 8px; background: #F4F6FA;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .82rem; color: #bbb; overflow: hidden; margin-top: 6px;
+      border: 1.5px dashed #DDD; text-align: center; padding: 8px;
+    }
+    .img-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .add-btn {
+      width: 100%; padding: 13px; background: #FFC107; border: none; border-radius: 50px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      color: #1a1a1a; transition: background .2s;
+    }
+    .add-btn:hover { background: #FFB300; }
+
+    /* ========== 公開エリア ========== */
+    .publish-area {
+      background: #fff; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07); margin-top: 24px;
+    }
+    .publish-area h3 { font-size: 1rem; font-weight: 900; color: #1565C0; margin-bottom: 6px; }
+    .publish-area > p { font-size: .875rem; color: #666; margin-bottom: 16px; line-height: 1.8; }
+    .pub-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .pub-btn {
+      padding: 12px 22px; border-radius: 50px; font-size: .9rem; font-weight: 700;
+      cursor: pointer; font-family: inherit; border: none; transition: all .2s;
+    }
+    .pub-btn-dl   { background: #1565C0; color: #fff; }
+    .pub-btn-dl:hover { background: #0D47A1; }
+    .pub-btn-copy { background: #fff; border: 2px solid #1565C0 !important; color: #1565C0; }
+    .pub-btn-copy:hover { background: #E3F2FD; }
+    .pub-msg { font-size: .85rem; color: #2E7D32; min-height: 20px; }
+
+    .steps {
+      background: #E8F5E9; border-radius: 10px; padding: 16px 20px;
+      font-size: .85rem; color: #388E3C; line-height: 2; margin-top: 16px;
+    }
+    .steps strong { color: #1B5E20; display: block; margin-bottom: 4px; }
+    .steps code {
+      background: #C8E6C9; padding: 1px 6px; border-radius: 4px;
+      font-family: 'Courier New', monospace; font-size: .82rem; color: #1B5E20;
+    }
+
+    /* ========== 画像ガイド ========== */
+    .img-guide {
+      background: #fff; border-radius: 16px; padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07); margin-top: 16px;
+      font-size: .875rem; color: #555; line-height: 1.9;
+    }
+    .img-guide h3 { font-size: 1rem; font-weight: 900; color: #1565C0; margin-bottom: 12px; }
+    .img-guide code {
+      background: #E3F2FD; padding: 1px 6px; border-radius: 4px;
+      font-family: 'Courier New', monospace; font-size: .82rem; color: #1565C0;
+    }
+    .img-guide p { margin-bottom: 10px; }
+    .img-guide p:last-child { margin-bottom: 0; }
+  </style>
+</head>
+<body>
+
+<!-- ========== パスワードゲート ========== -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">🏠</div>
+    <div class="gate-title">実績管理</div>
+    <div class="gate-sub">お片付け本舗松本 管理者専用ページ</div>
+    <input type="password" id="gate-pw" placeholder="パスワードを入力" autocomplete="current-password">
+    <button class="gate-btn" id="gate-submit">ログイン</button>
+    <p class="gate-error" id="gate-error"></p>
+  </div>
+</div>
+
+<!-- ========== 管理画面（ログイン後に表示） ========== -->
+<div id="admin-ui" style="display:none">
+
+  <header class="admin-header">
+    <div class="header-logo">
+      <span>🏠</span>
+      <span>お片付け本舗松本</span>
+      <span class="badge-admin">管理者</span>
+    </div>
+    <button class="logout-btn" id="logout-btn">ログアウト</button>
+  </header>
+
+  <div class="admin-body">
+    <a href="index.html" class="home-link">← トップページを確認する</a>
+
+    <div class="warn-banner" id="warn-banner"></div>
+
+    <!-- サービス選択タブ -->
+    <div class="service-tabs" id="service-tabs"></div>
+
+    <!-- メインコンテンツ -->
+    <div class="admin-grid">
+
+      <!-- 左：実績リスト -->
+      <div class="panel">
+        <div class="panel-title">
+          <span id="list-title">実績一覧</span>
+          <span class="count-badge" id="count-badge">0 件</span>
+        </div>
+        <div class="entry-list" id="entry-list"></div>
+      </div>
+
+      <!-- 右：追加フォーム -->
+      <div class="panel">
+        <div class="panel-title">実績を追加</div>
+
+        <div class="form-group">
+          <label>画像URL（省略可）</label>
+          <input type="url" id="img-url" placeholder="https://...">
+          <div class="img-preview" id="img-preview">URLを入力するとここにプレビューが表示されます</div>
+        </div>
+
+        <div class="form-group">
+          <label>作業コメント <span style="color:#E53935;font-size:.75rem;margin-left:4px;">必須</span></label>
+          <textarea id="add-comment" placeholder="例）2LDKの不用品回収。ソファ・冷蔵庫・タンスなど30点を半日で片付けました。"></textarea>
+        </div>
+
+        <button class="add-btn" id="add-btn">＋ 追加する</button>
+      </div>
+    </div>
+
+    <!-- 公開エリア -->
+    <div class="publish-area">
+      <h3>📥 変更をサイトに公開する</h3>
+      <p>
+        追加・削除した内容は、このページを閉じると消えます。<br>
+        下のボタンで更新データをダウンロードして、サーバーにアップロードすることで公開されます。
+      </p>
+      <div class="pub-btns">
+        <button class="pub-btn pub-btn-dl"   id="dl-btn">⬇ gallery.json をダウンロード</button>
+        <button class="pub-btn pub-btn-copy" id="copy-btn">📋 JSONをコピー</button>
+      </div>
+      <p class="pub-msg" id="pub-msg"></p>
+      <div class="steps">
+        <strong>公開手順（ダウンロードした場合）</strong>
+        ① 上のボタンで <code>gallery.json</code> をダウンロード<br>
+        ② FTPソフトまたはホスティングのファイルマネージャーを開く<br>
+        ③ サーバーの <code>data/gallery.json</code> を、ダウンロードしたファイルで上書きアップロード<br>
+        ④ ブラウザでサイトを再読み込みして反映を確認
+      </div>
+    </div>
+
+    <!-- 画像の置き場所ガイド -->
+    <div class="img-guide">
+      <h3>📷 作業写真の準備方法</h3>
+      <p>
+        <strong>方法①（推奨）</strong>　作業写真をサーバーの <code>images/jisseki/</code> フォルダにアップロードし、
+        URLを <code>https://okataduke-matsumoto.jp/images/jisseki/写真名.jpg</code> の形式で入力してください。
+      </p>
+      <p>
+        <strong>方法②（Googleドライブ）</strong>　写真を「リンクを知っている全員が閲覧可」で共有し、
+        共有URLの <code>https://drive.google.com/file/d/<strong>XXXXXXX</strong>/view</code> の
+        XXXXXXX 部分をコピーして <code>https://drive.google.com/uc?export=view&amp;id=XXXXXXX</code>
+        に書き換えたURLを使ってください。
+      </p>
+      <p>
+        <strong>画像なしでも大丈夫</strong>　URL欄を空白のままにするとサービスアイコンが代わりに表示されます。コメントだけでも追加できます。
+      </p>
+    </div>
+
+  </div><!-- /admin-body -->
+</div><!-- /admin-ui -->
+
+<script>
+/* ---------- 定数 ---------- */
+// パスワードのハッシュ値（元のパスワードは保存しない）
+// 変更方法：ブラウザのコンソールで以下を実行してハッシュ値を取得し、下の値を書き換えてください。
+// crypto.subtle.digest('SHA-256', new TextEncoder().encode('新しいパスワード'))
+//   .then(b => console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+const ADMIN_PASSWORD_HASH = '32280f7b56de2fc61b4f4a2356a37bdaad95f5c3d232d7793a00aaad95d320eb';
+const GALLERY_JSON_URL    = './data/gallery.json';
+
+const SERVICES = {
+  fuyo:     { label: '🗑️ 不用品回収', full: '不用品回収・処分', icon: '🗑️' },
+  ihin:     { label: '🕯️ 遺品整理',  full: '遺品整理',         icon: '🕯️' },
+  gomi:     { label: '🏚️ ゴミ屋敷',  full: 'ゴミ屋敷・片付け', icon: '🏚️' },
+  benriya:  { label: '🔧 便利屋',    full: '便利屋・日常サポート', icon: '🔧' },
+  hikkoshi: { label: '🚚 引越し',    full: '引越し補助・荷物運び', icon: '🚚' },
+  cleaning: { label: '🧹 クリーニング', full: 'ハウスクリーニング', icon: '🧹' },
+  reform:   { label: '🏗️ リフォーム', full: 'リフォーム',       icon: '🏗️' },
+};
+
+/* ---------- 状態 ---------- */
+let galleryData    = {};
+let currentService = 'fuyo';
+
+/* ---------- SHA-256 ---------- */
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* =========================================
+   パスワードゲート
+========================================= */
+const gatePw     = document.getElementById('gate-pw');
+const gateSubmit = document.getElementById('gate-submit');
+const gateError  = document.getElementById('gate-error');
+
+gateSubmit.addEventListener('click', doLogin);
+gatePw.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const hash = await sha256Hex(gatePw.value);
+  if (hash === ADMIN_PASSWORD_HASH) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('admin-ui').style.display = 'block';
+    await initAdmin();
+  } else {
+    gateError.textContent = 'パスワードが違います。';
+    gatePw.value = '';
+    gatePw.focus();
+  }
+}
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  location.reload();
+});
+
+/* =========================================
+   管理画面初期化
+========================================= */
+async function initAdmin() {
+  await loadGallery();
+  buildServiceTabs();
+  renderEntryList();
+  setupForm();
+  setupPublish();
+}
+
+/* ---------- ギャラリーデータ読み込み ---------- */
+async function loadGallery() {
+  try {
+    const res = await fetch(GALLERY_JSON_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('not found');
+    galleryData = await res.json();
+    Object.keys(SERVICES).forEach(k => { if (!Array.isArray(galleryData[k])) galleryData[k] = []; });
+  } catch {
+    galleryData = Object.fromEntries(Object.keys(SERVICES).map(k => [k, []]));
+    showWarn('⚠️ data/gallery.json が見つかりませんでした。新規作成モードで動作中です。ダウンロード後、data/ フォルダにアップロードしてください。');
+  }
+}
+
+function showWarn(msg) {
+  const el = document.getElementById('warn-banner');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+/* ---------- サービスタブ ---------- */
+function buildServiceTabs() {
+  const container = document.getElementById('service-tabs');
+  container.innerHTML = '';
+  Object.entries(SERVICES).forEach(([key, svc]) => {
+    const btn = document.createElement('button');
+    btn.className = 'service-tab' + (key === currentService ? ' active' : '');
+    btn.textContent = svc.label;
+    btn.addEventListener('click', () => {
+      currentService = key;
+      container.querySelectorAll('.service-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderEntryList();
+      // フォームをクリア
+      document.getElementById('img-url').value = '';
+      document.getElementById('add-comment').value = '';
+      document.getElementById('img-preview').textContent = 'URLを入力するとここにプレビューが表示されます';
+    });
+    container.appendChild(btn);
+  });
+}
+
+/* ---------- 実績リスト描画 ---------- */
+function renderEntryList() {
+  const records = galleryData[currentService] || [];
+  const list    = document.getElementById('entry-list');
+  const count   = document.getElementById('count-badge');
+  document.getElementById('list-title').textContent = SERVICES[currentService].full + ' の実績';
+  count.textContent = records.length + ' 件';
+  list.innerHTML = '';
+
+  if (records.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.textContent = 'まだ実績がありません。\n右のフォームから追加してください。';
+    list.appendChild(empty);
+    return;
+  }
+
+  records.forEach((rec, idx) => {
+    const card = document.createElement('div');
+    card.className = 'entry-card';
+
+    // サムネイル
+    const thumb = document.createElement('div');
+    thumb.className = 'entry-thumb';
+    if (rec.imgUrl) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = rec.imgUrl;
+      img.addEventListener('error', () => { thumb.textContent = SERVICES[currentService].icon; });
+      thumb.appendChild(img);
+    } else {
+      thumb.textContent = SERVICES[currentService].icon;
+    }
+
+    // テキスト情報
+    const info = document.createElement('div');
+    info.className = 'entry-info';
+
+    const comment = document.createElement('div');
+    comment.className = 'entry-comment';
+    comment.textContent = rec.comment;
+    info.appendChild(comment);
+
+    if (rec.imgUrl) {
+      const urlEl = document.createElement('div');
+      urlEl.className = 'entry-url';
+      urlEl.textContent = rec.imgUrl;
+      info.appendChild(urlEl);
+    }
+
+    // 削除ボタン
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete-btn';
+    delBtn.textContent = '🗑';
+    delBtn.title = '削除';
+    delBtn.addEventListener('click', () => {
+      const preview = rec.comment.length > 20 ? rec.comment.slice(0, 20) + '…' : rec.comment;
+      if (!confirm(`「${preview}」を削除しますか？`)) return;
+      galleryData[currentService].splice(idx, 1);
+      renderEntryList();
+    });
+
+    card.appendChild(thumb);
+    card.appendChild(info);
+    card.appendChild(delBtn);
+    list.appendChild(card);
+  });
+}
+
+/* ---------- 追加フォーム ---------- */
+function setupForm() {
+  const imgUrlInput = document.getElementById('img-url');
+  const preview     = document.getElementById('img-preview');
+  const commentEl   = document.getElementById('add-comment');
+  const addBtn      = document.getElementById('add-btn');
+
+  // 画像プレビュー（入力が止まって600ms後に更新）
+  let timer;
+  imgUrlInput.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => updatePreview(imgUrlInput.value.trim(), preview), 600);
+  });
+
+  addBtn.addEventListener('click', () => {
+    const url     = imgUrlInput.value.trim();
+    const comment = commentEl.value.trim();
+    if (!comment) {
+      alert('コメントを入力してください。');
+      commentEl.focus();
+      return;
+    }
+
+    if (!galleryData[currentService]) galleryData[currentService] = [];
+    galleryData[currentService].push({ imgUrl: url, comment });
+
+    imgUrlInput.value  = '';
+    commentEl.value    = '';
+    preview.textContent = 'URLを入力するとここにプレビューが表示されます';
+    renderEntryList();
+  });
+}
+
+function updatePreview(url, container) {
+  container.innerHTML = '';
+  if (!url) {
+    container.textContent = 'URLを入力するとここにプレビューが表示されます';
+    return;
+  }
+  const img = document.createElement('img');
+  img.alt = 'プレビュー';
+  img.src = url;
+  img.addEventListener('error', () => {
+    container.innerHTML = '';
+    const msg = document.createElement('span');
+    msg.style.color = '#E53935';
+    msg.textContent = '画像を読み込めませんでした。URLを確認してください。';
+    container.appendChild(msg);
+  });
+  container.appendChild(img);
+}
+
+/* ---------- 公開（ダウンロード・コピー） ---------- */
+function setupPublish() {
+  const dlBtn   = document.getElementById('dl-btn');
+  const copyBtn = document.getElementById('copy-btn');
+  const pubMsg  = document.getElementById('pub-msg');
+
+  dlBtn.addEventListener('click', () => {
+    const json = JSON.stringify(galleryData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: 'gallery.json' });
+    a.click();
+    URL.revokeObjectURL(url);
+    showPubMsg('✅ ダウンロードしました。サーバーの data/gallery.json に上書きアップロードしてください。', pubMsg);
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const json = JSON.stringify(galleryData, null, 2);
+    try {
+      await navigator.clipboard.writeText(json);
+      showPubMsg('✅ クリップボードにコピーしました。', pubMsg);
+    } catch {
+      showPubMsg('⚠️ コピーできませんでした。ダウンロードをお使いください。', pubMsg);
+    }
+  });
+}
+
+function showPubMsg(text, el) {
+  el.textContent = text;
+  setTimeout(() => { el.textContent = ''; }, 5000);
+}
+</script>
+</body>
+</html>

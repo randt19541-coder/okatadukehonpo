@@ -2,24 +2,6 @@
    かたづけ本舗 メインJS
 ========================================= */
 
-/* ---------- 定数 ---------- */
-// 管理者パスワードは「ハッシュ値（指紋）」で保存。元のパスワードはコードに残さない。
-//
-// ▼ パスワードを変更したいとき:
-//   1. ブラウザでこのサイトを開き、F12 →「コンソール」タブに以下を貼って実行
-//      （'あたらしい合言葉' の部分を新しいパスワードに書き換える）:
-//        crypto.subtle.digest('SHA-256', new TextEncoder().encode('あたらしい合言葉'))
-//          .then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
-//   2. 表示された長い文字列を、下の ADMIN_PASSWORD_HASH の値に貼り替えて保存。
-const ADMIN_PASSWORD_HASH = '32280f7b56de2fc61b4f4a2356a37bdaad95f5c3d232d7793a00aaad95d320eb';
-const STORAGE_KEY    = 'benriya_jisseki';
-
-/* 入力文字列を SHA-256 でハッシュ化し、16進文字列で返す */
-async function sha256Hex(text) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 /* ---------- サービス情報 ---------- */
 const SERVICE_LABELS = {
   fuyo:     '🗑️ 不用品回収・処分 ｜ 実績ギャラリー',
@@ -32,20 +14,25 @@ const SERVICE_LABELS = {
 };
 
 const SERVICE_ICONS = {
-  fuyo:'🗑️', ihin:'🕯️', gomi:'🏚️', benriya:'🔧', hikkoshi:'🚚', cleaning:'🧹', reform:'🏗️'
+  fuyo: '🗑️', ihin: '🕯️', gomi: '🏚️',
+  benriya: '🔧', hikkoshi: '🚚', cleaning: '🧹', reform: '🏗️',
 };
 
 /* ---------- 状態 ---------- */
-let isAdmin       = false;
 let currentService = null;
+let galleryCache   = null;   // ページロード中に1回だけfetchする
 
-/* ---------- LocalStorage ---------- */
-function loadData() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-  catch { return {}; }
-}
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+/* ---------- ギャラリーデータ取得 ---------- */
+async function fetchGallery() {
+  if (galleryCache) return galleryCache;
+  try {
+    const res = await fetch('./data/gallery.json');
+    if (!res.ok) throw new Error('fetch failed');
+    galleryCache = await res.json();
+  } catch {
+    galleryCache = {};
+  }
+  return galleryCache;
 }
 
 /* =========================================
@@ -82,37 +69,37 @@ document.querySelectorAll('.voice-tab').forEach(tab => {
 /* =========================================
    実績モーダル
 ========================================= */
-const overlay       = document.getElementById('modal-overlay');
-const modalTitle    = document.getElementById('modal-title');
-const modalGallery  = document.getElementById('modal-gallery');
-const modalEmpty    = document.getElementById('modal-empty');
-const modalClose    = document.getElementById('modal-close');
-const adminPanel    = document.getElementById('admin-panel');
-const adminLogin    = document.getElementById('admin-login');
-const adminToggleBtn    = document.getElementById('admin-toggle-btn');
-const adminLoginForm    = document.getElementById('admin-login-form');
-const adminPw           = document.getElementById('admin-pw');
-const adminPwSubmit     = document.getElementById('admin-pw-submit');
-const adminLoginMsg     = document.getElementById('admin-login-msg');
-const adminAddBtn       = document.getElementById('admin-add-btn');
-const adminLogoutBtn    = document.getElementById('admin-logout-btn');
-const adminImgUrl       = document.getElementById('admin-img-url');
-const adminComment      = document.getElementById('admin-comment');
+const overlay      = document.getElementById('modal-overlay');
+const modalTitle   = document.getElementById('modal-title');
+const modalGallery = document.getElementById('modal-gallery');
+const modalEmpty   = document.getElementById('modal-empty');
+const modalClose   = document.getElementById('modal-close');
 
 /* サービスカード クリック */
 document.querySelectorAll('.service-item').forEach(item => {
   const open = () => openModal(item.dataset.service);
   item.addEventListener('click', open);
-  item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  item.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+  });
 });
 
-function openModal(serviceKey) {
+async function openModal(serviceKey) {
   currentService = serviceKey;
   modalTitle.textContent = SERVICE_LABELS[serviceKey] || serviceKey;
-  renderGallery();
-  resetAdminUI();
+
+  // ローディング中はスピナーを表示
+  modalGallery.innerHTML = '';
+  modalEmpty.classList.remove('show');
+  const loading = document.createElement('p');
+  loading.className = 'gallery-loading';
+  loading.textContent = '読み込み中…';
+  modalGallery.appendChild(loading);
+
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  await renderGallery();
 }
 
 function closeModal() {
@@ -126,9 +113,10 @@ overlay.addEventListener('click', e => { if (e.target === overlay) closeModal();
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 /* ギャラリー描画 */
-function renderGallery() {
-  const data    = loadData();
-  const records = (data[currentService] || []);
+async function renderGallery() {
+  const data    = await fetchGallery();
+  const records = data[currentService] || [];
+
   modalGallery.innerHTML = '';
 
   if (records.length === 0) {
@@ -138,61 +126,56 @@ function renderGallery() {
   modalEmpty.classList.remove('show');
 
   records.forEach((rec, idx) => {
-    const card = document.createElement('div');
-    card.className = 'gallery-card';
-
-    const imgPart = rec.imgUrl
-      ? `<img src="${escHtml(rec.imgUrl)}" alt="実績写真 ${idx + 1}" loading="lazy" onerror="this.parentElement.querySelector('.gallery-img-placeholder').style.display='flex'; this.style.display='none';">
-         <div class="gallery-img-placeholder" style="display:none">${SERVICE_ICONS[currentService]}</div>`
-      : `<div class="gallery-img-placeholder">${SERVICE_ICONS[currentService]}</div>`;
-
-    const deletePart = isAdmin
-      ? `<button class="gallery-delete-btn" data-idx="${idx}" title="削除">✕</button>` : '';
-
-    card.innerHTML = `
-      ${imgPart}
-      ${deletePart}
-      <div class="gallery-card-body"><p>${escHtml(rec.comment)}</p></div>
-    `;
-    modalGallery.appendChild(card);
+    modalGallery.appendChild(createGalleryCard(rec, idx));
   });
-
-  /* 削除ボタン */
-  if (isAdmin) {
-    modalGallery.querySelectorAll('.gallery-delete-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const i   = parseInt(btn.dataset.idx);
-        const d   = loadData();
-        d[currentService].splice(i, 1);
-        saveData(d);
-        renderGallery();
-      });
-    });
-  }
 }
 
-/* 実績追加 */
-adminAddBtn.addEventListener('click', () => {
-  const url     = adminImgUrl.value.trim();
-  const comment = adminComment.value.trim();
-  if (!comment) { alert('コメントを入力してください。'); return; }
+function createGalleryCard(rec, idx) {
+  const card = document.createElement('div');
+  card.className = 'gallery-card';
 
-  const d = loadData();
-  if (!d[currentService]) d[currentService] = [];
-  d[currentService].push({ imgUrl: url, comment });
-  saveData(d);
+  if (rec.imgUrl) {
+    const img = document.createElement('img');
+    img.src     = rec.imgUrl;
+    img.alt     = `実績写真 ${idx + 1}`;
+    img.loading = 'lazy';
 
-  adminImgUrl.value  = '';
-  adminComment.value = '';
-  renderGallery();
-});
+    const placeholder = document.createElement('div');
+    placeholder.className = 'gallery-img-placeholder';
+    placeholder.style.display = 'none';
+    placeholder.textContent = SERVICE_ICONS[currentService] || '📷';
 
-/* ---------- 管理者：ロゴ5回タップで起動 ---------- */
+    img.addEventListener('error', () => {
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+    });
+
+    card.appendChild(img);
+    card.appendChild(placeholder);
+  } else {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'gallery-img-placeholder';
+    placeholder.textContent = SERVICE_ICONS[currentService] || '📷';
+    card.appendChild(placeholder);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'gallery-card-body';
+  const p = document.createElement('p');
+  p.textContent = rec.comment;   // textContent でXSS対策
+  body.appendChild(p);
+  card.appendChild(body);
+
+  return card;
+}
+
+/* =========================================
+   ロゴ5回タップ → 管理ページへ
+========================================= */
 let logoTapCount = 0;
 let logoTapTimer = null;
 const logoEl = document.querySelector('.logo');
 
-logoEl.style.cursor = 'pointer';
 logoEl.addEventListener('click', () => {
   logoTapCount++;
   clearTimeout(logoTapTimer);
@@ -200,57 +183,9 @@ logoEl.addEventListener('click', () => {
 
   if (logoTapCount >= 5) {
     logoTapCount = 0;
-    const area = document.getElementById('admin-area');
-    if (!isAdmin) {
-      area.style.display = 'block';
-      adminPw.focus();
-    }
+    window.location.href = './admin.html';
   }
 });
-
-adminPwSubmit.addEventListener('click', doLogin);
-adminPw.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-async function doLogin() {
-  const inputHash = await sha256Hex(adminPw.value);
-  if (inputHash === ADMIN_PASSWORD_HASH) {
-    isAdmin = true;
-    adminLogin.style.display  = 'none';
-    adminPanel.style.display  = 'block';
-    renderGallery();
-  } else {
-    adminLoginMsg.textContent = 'パスワードが違います。';
-    adminPw.value = '';
-    adminPw.focus();
-  }
-}
-
-adminLogoutBtn.addEventListener('click', () => {
-  isAdmin = false;
-  adminPanel.style.display = 'none';
-  adminLogin.style.display = 'block';
-  document.getElementById('admin-area').style.display = 'none';
-  adminPw.value = '';
-  renderGallery();
-});
-
-function resetAdminUI() {
-  if (!isAdmin) {
-    adminLogin.style.display  = 'block';
-    adminPanel.style.display  = 'none';
-    // admin-areaの表示はロゴ5回タップで制御するためリセットしない
-    adminLoginMsg.textContent = '';
-  }
-}
-
-/* ---------- XSS対策 ---------- */
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
 
 /* =========================================
    お問い合わせフォーム
@@ -263,7 +198,6 @@ form.addEventListener('submit', async e => {
   msg.textContent = '';
   msg.className   = 'form-message';
 
-  // 必須項目チェック
   if (!form.name.value.trim() || !form.tel.value.trim() || !form.service.value || !form.agree.checked) {
     msg.textContent = '必須項目をすべてご入力・ご確認ください。';
     msg.classList.add('error');
@@ -276,11 +210,10 @@ form.addEventListener('submit', async e => {
   submitBtn.textContent = '送信中…';
 
   try {
-    // Web3Forms へ送信（入力内容をそのまま受信メールに転送してくれる）
     const res = await fetch(form.action, {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      body:    JSON.stringify(Object.fromEntries(new FormData(form))),
     });
     const data = await res.json();
 
@@ -291,7 +224,7 @@ form.addEventListener('submit', async e => {
     } else {
       throw new Error(data.message || '送信に失敗しました');
     }
-  } catch (err) {
+  } catch {
     msg.textContent = '申し訳ありません。送信に失敗しました。お急ぎの場合はお電話（0120-490-530）でご連絡ください。';
     msg.classList.add('error');
   } finally {

@@ -604,6 +604,8 @@ section { padding: 80px 0; }
 .modal-empty { text-align: center; color: #aaa; padding: 32px 0; display: none; }
 .modal-empty.show { display: block; }
 
+.gallery-loading { text-align: center; color: #aaa; padding: 32px 0; font-size: .9rem; }
+
 /* 管理者エリア */
 .admin-area {
   border-top: 2px dashed #E0E0E0;
