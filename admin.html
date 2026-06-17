@@ -484,11 +484,22 @@ function setupForm() {
   const commentEl   = document.getElementById('add-comment');
   const addBtn      = document.getElementById('add-btn');
 
+  // Google Drive 共有URLを直接表示URLに変換する
+  function convertGoogleDriveUrl(url) {
+    const match = url.match(/drive\.google\.com\/file\/d\/([^\/\?]+)/);
+    if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    return url;
+  }
+
   // 画像プレビュー（入力が止まって600ms後に更新）
   let timer;
   imgUrlInput.addEventListener('input', () => {
     clearTimeout(timer);
-    timer = setTimeout(() => updatePreview(imgUrlInput.value.trim(), preview), 600);
+    timer = setTimeout(() => {
+      const converted = convertGoogleDriveUrl(imgUrlInput.value.trim());
+      if (converted !== imgUrlInput.value.trim()) imgUrlInput.value = converted;
+      updatePreview(converted, preview);
+    }, 600);
   });
 
   addBtn.addEventListener('click', () => {
