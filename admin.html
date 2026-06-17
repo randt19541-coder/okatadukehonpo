@@ -572,12 +572,19 @@ function setupForm() {
       status.style.color = '#555';
 
       try {
-        const base64 = await new Promise((res, rej) => {
+        const dataUrl = await new Promise((res, rej) => {
           const reader = new FileReader();
-          reader.onload = e => res(e.target.result.split(',')[1]);
+          reader.onload = e => res(e.target.result);
           reader.onerror = rej;
           reader.readAsDataURL(f);
         });
+        const base64 = dataUrl.split(',')[1];
+
+        // ローカルプレビューを即表示
+        preview.innerHTML = '';
+        const previewImg = document.createElement('img');
+        previewImg.src = dataUrl;
+        preview.appendChild(previewImg);
 
         const filename = Date.now() + '_' + f.name.replace(/[^\w.\-]/g, '_');
         const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/images/jisseki/${filename}`;
