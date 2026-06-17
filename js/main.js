@@ -134,24 +134,44 @@ function createGalleryCard(rec, idx) {
   const card = document.createElement('div');
   card.className = 'gallery-card';
 
-  if (rec.imgUrl) {
-    const img = document.createElement('img');
-    img.src     = rec.imgUrl;
-    img.alt     = `実績写真 ${idx + 1}`;
-    img.loading = 'lazy';
+  const imgBefore = rec.imgBefore || rec.imgUrl;
+  const imgAfter  = rec.imgAfter;
 
-    const placeholder = document.createElement('div');
-    placeholder.className = 'gallery-img-placeholder';
-    placeholder.style.display = 'none';
-    placeholder.textContent = SERVICE_ICONS[currentService] || '📷';
+  if (imgBefore || imgAfter) {
+    const photoWrap = document.createElement('div');
+    photoWrap.className = imgBefore && imgAfter ? 'gallery-photo-pair' : 'gallery-photo-single';
 
-    img.addEventListener('error', () => {
-      img.style.display = 'none';
-      placeholder.style.display = 'flex';
-    });
+    function makePhoto(src, label) {
+      const wrap = document.createElement('div');
+      wrap.className = 'gallery-photo-wrap';
 
-    card.appendChild(img);
-    card.appendChild(placeholder);
+      const img = document.createElement('img');
+      img.src     = src;
+      img.alt     = label;
+      img.loading = 'lazy';
+
+      const placeholder = document.createElement('div');
+      placeholder.className = 'gallery-img-placeholder';
+      placeholder.style.display = 'none';
+      placeholder.textContent = SERVICE_ICONS[currentService] || '📷';
+      img.addEventListener('error', () => {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+      });
+
+      const lbl = document.createElement('span');
+      lbl.className = 'gallery-photo-label';
+      lbl.textContent = label;
+
+      wrap.appendChild(img);
+      wrap.appendChild(placeholder);
+      wrap.appendChild(lbl);
+      return wrap;
+    }
+
+    if (imgBefore) photoWrap.appendChild(makePhoto(imgBefore, '施工前'));
+    if (imgAfter)  photoWrap.appendChild(makePhoto(imgAfter,  '施工後'));
+    card.appendChild(photoWrap);
   } else {
     const placeholder = document.createElement('div');
     placeholder.className = 'gallery-img-placeholder';
