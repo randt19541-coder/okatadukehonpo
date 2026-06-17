@@ -162,11 +162,19 @@
       padding: 12px 22px; border-radius: 50px; font-size: .9rem; font-weight: 700;
       cursor: pointer; font-family: inherit; border: none; transition: all .2s;
     }
+    .pub-btn-publish { background: #E53935; color: #fff; font-size: 1rem; }
+    .pub-btn-publish:hover { background: #B71C1C; }
+    .pub-btn-publish:disabled { background: #ccc; cursor: not-allowed; }
     .pub-btn-dl   { background: #1565C0; color: #fff; }
     .pub-btn-dl:hover { background: #0D47A1; }
-    .pub-btn-copy { background: #fff; border: 2px solid #1565C0 !important; color: #1565C0; }
-    .pub-btn-copy:hover { background: #E3F2FD; }
     .pub-msg { font-size: .85rem; color: #2E7D32; min-height: 20px; }
+
+    .token-area { background: #FFF9C4; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .token-area label { font-size: .85rem; font-weight: 700; color: #555; display: block; margin-bottom: 8px; }
+    .token-row { display: flex; gap: 8px; }
+    .token-row input { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: .9rem; }
+    .token-save-btn { padding: 8px 16px; background: #F57F17; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .token-hint { font-size: .8rem; color: #777; margin-top: 6px; margin-bottom: 0; }
 
     .steps {
       background: #E8F5E9; border-radius: 10px; padding: 16px 20px;
@@ -266,23 +274,23 @@
 
     <!-- 公開エリア -->
     <div class="publish-area">
-      <h3>📥 変更をサイトに公開する</h3>
-      <p>
-        追加・削除した内容は、このページを閉じると消えます。<br>
-        下のボタンで更新データをダウンロードして、サーバーにアップロードすることで公開されます。
-      </p>
+      <h3>🚀 変更をサイトに公開する</h3>
+
+      <!-- GitHub トークン設定 -->
+      <div class="token-area" id="token-area">
+        <label for="gh-token">GitHub トークン（初回のみ入力）</label>
+        <div class="token-row">
+          <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxx">
+          <button class="token-save-btn" id="token-save-btn">保存</button>
+        </div>
+        <p class="token-hint" id="token-hint"></p>
+      </div>
+
       <div class="pub-btns">
-        <button class="pub-btn pub-btn-dl"   id="dl-btn">⬇ gallery.json をダウンロード</button>
-        <button class="pub-btn pub-btn-copy" id="copy-btn">📋 JSONをコピー</button>
+        <button class="pub-btn pub-btn-publish" id="publish-btn">🚀 サイトに公開する</button>
+        <button class="pub-btn pub-btn-dl" id="dl-btn">⬇ JSONをダウンロード（バックアップ）</button>
       </div>
       <p class="pub-msg" id="pub-msg"></p>
-      <div class="steps">
-        <strong>公開手順（ダウンロードした場合）</strong>
-        ① 上のボタンで <code>gallery.json</code> をダウンロード<br>
-        ② FTPソフトまたはホスティングのファイルマネージャーを開く<br>
-        ③ サーバーの <code>data/gallery.json</code> を、ダウンロードしたファイルで上書きアップロード<br>
-        ④ ブラウザでサイトを再読み込みして反映を確認
-      </div>
     </div>
 
     <!-- 画像の置き場所ガイド -->
@@ -565,11 +573,32 @@ function updatePreview(url, container) {
   container.appendChild(img);
 }
 
-/* ---------- 公開（ダウンロード・コピー） ---------- */
+/* ---------- 公開 ---------- */
+const GH_OWNER = 'randt19541-coder';
+const GH_REPO  = 'okatadukehonpo';
+const GH_PATH  = 'data/gallery.json';
+
 function setupPublish() {
-  const dlBtn   = document.getElementById('dl-btn');
-  const copyBtn = document.getElementById('copy-btn');
-  const pubMsg  = document.getElementById('pub-msg');
+  const dlBtn      = document.getElementById('dl-btn');
+  const publishBtn = document.getElementById('publish-btn');
+  const pubMsg     = document.getElementById('pub-msg');
+  const tokenInput = document.getElementById('gh-token');
+  const tokenSave  = document.getElementById('token-save-btn');
+  const tokenHint  = document.getElementById('token-hint');
+
+  // 保存済みトークンを読み込む
+  const saved = localStorage.getItem('gh_token');
+  if (saved) {
+    tokenInput.value = saved;
+    tokenHint.textContent = '✅ トークンが保存されています';
+  }
+
+  tokenSave.addEventListener('click', () => {
+    const val = tokenInput.value.trim();
+    if (!val) { tokenHint.textContent = '⚠️ トークンを入力してください'; return; }
+    localStorage.setItem('gh_token', val);
+    tokenHint.textContent = '✅ 保存しました！';
+  });
 
   dlBtn.addEventListener('click', () => {
     const json = JSON.stringify(galleryData, null, 2);
@@ -578,23 +607,53 @@ function setupPublish() {
     const a    = Object.assign(document.createElement('a'), { href: url, download: 'gallery.json' });
     a.click();
     URL.revokeObjectURL(url);
-    showPubMsg('✅ ダウンロードしました。サーバーの data/gallery.json に上書きアップロードしてください。', pubMsg);
+    showPubMsg('✅ ダウンロードしました。', pubMsg);
   });
 
-  copyBtn.addEventListener('click', async () => {
-    const json = JSON.stringify(galleryData, null, 2);
+  publishBtn.addEventListener('click', async () => {
+    const token = localStorage.getItem('gh_token');
+    if (!token) {
+      showPubMsg('⚠️ 先にトークンを入力して「保存」してください。', pubMsg, true);
+      return;
+    }
+
+    publishBtn.disabled = true;
+    publishBtn.textContent = '公開中...';
+    showPubMsg('', pubMsg);
+
     try {
-      await navigator.clipboard.writeText(json);
-      showPubMsg('✅ クリップボードにコピーしました。', pubMsg);
-    } catch {
-      showPubMsg('⚠️ コピーできませんでした。ダウンロードをお使いください。', pubMsg);
+      const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+
+      // 現在のファイルのSHAを取得
+      const getRes = await fetch(apiUrl, {
+        headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (!getRes.ok) throw new Error('トークンが無効かもしれません');
+      const { sha } = await getRes.json();
+
+      // ファイルを更新
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(galleryData, null, 2))));
+      const putRes  = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: '実績データを更新', content, sha })
+      });
+      if (!putRes.ok) throw new Error('公開に失敗しました');
+
+      showPubMsg('✅ 公開しました！1〜2分でサイトに反映されます。', pubMsg);
+    } catch (e) {
+      showPubMsg(`⚠️ エラー: ${e.message}`, pubMsg, true);
+    } finally {
+      publishBtn.disabled = false;
+      publishBtn.textContent = '🚀 サイトに公開する';
     }
   });
 }
 
-function showPubMsg(text, el) {
+function showPubMsg(text, el, isError = false) {
   el.textContent = text;
-  setTimeout(() => { el.textContent = ''; }, 5000);
+  el.style.color = isError ? '#E53935' : '#2E7D32';
+  if (text) setTimeout(() => { el.textContent = ''; }, 8000);
 }
 </script>
 </body>
