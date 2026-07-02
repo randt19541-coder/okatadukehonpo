@@ -1,20 +1,19 @@
-﻿{
+{
   "fuyo": [
     {
       "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/1781673870770_IMG_4707.JPG",
       "imgAfter": "https://okataduke-matsumoto.com/images/jisseki/1781673884549_IMG_0917.jpeg",
       "comment": "松本市にお住まいのお客様より、生前整理のご依頼をいただきました。ご本人の希望に寄り添いながら、不用品の回収・処分を丁寧に対応。「すっきりして気持ちが楽になった」とのお声をいただきました。"
+    },
+    {
+      "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/1782959489950_IMG_1100.jpeg",
+      "imgAfter": "https://okataduke-matsumoto.com/images/jisseki/1782959806451_IMG_1099.jpeg",
+      "comment": "松本市のお客様より、急ぎでの作業依頼を頂きました。お電話頂いた次の日に対応し、迅速に完了。「くすぐに来てくれて、本当に助かった。」と嬉しいお言葉頂きました。松本市で便利屋・お困りごとの解決お探しなら、お片付け本舗松本へ。"
     }
   ],
   "ihin": [],
   "gomi": [],
-  "benriya": [
-    {
-      "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/1781675574500_IMG_0973.jpg",
-      "imgAfter": "https://okataduke-matsumoto.com/images/jisseki/1781675398471_IMG_0975.jpg",
-      "comment": "「毎年草が伸びて困っている」とご相談いただいた町内会様の草刈りを担当しました。広範囲の除草作業も迅速に対応。定期的なご依頼もお任せください。"
-    }
-  ],
+  "benriya": [],
   "hikkoshi": [],
   "cleaning": [],
   "reform": []
