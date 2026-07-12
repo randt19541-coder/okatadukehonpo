@@ -5,7 +5,7 @@
 /* ---------- サービス情報 ---------- */
 const SERVICE_LABELS = {
   fuyo:     '🗑️ 不用品回収・処分 ｜ 実績ギャラリー',
-  ihin:     '🕯️ 遺品整理 ｜ 実績ギャラリー',
+  ihin:     '🕯️ 遺品整理 ｜ お役立ち情報',
   gomi:     '🏚️ ゴミ屋敷・片付け ｜ 実績ギャラリー',
   benriya:  '🔧 便利屋・日常サポート ｜ 実績ギャラリー',
   hikkoshi: '🚚 引越し補助・荷物運び ｜ 実績ギャラリー',
@@ -71,9 +71,25 @@ document.querySelectorAll('.voice-tab').forEach(tab => {
 ========================================= */
 const overlay      = document.getElementById('modal-overlay');
 const modalTitle   = document.getElementById('modal-title');
+const modalInfo    = document.getElementById('modal-info');
 const modalGallery = document.getElementById('modal-gallery');
 const modalEmpty   = document.getElementById('modal-empty');
 const modalClose   = document.getElementById('modal-close');
+
+/* サービス別のお役立ち情報をモーダルへ差し込む。
+   元要素（#info-xxx）はSEOのため hidden で常時DOMに残し、その中身を複製して表示する。
+   情報がある場合は true を返す（実績0件でも「まだありません」を出さないため） */
+function renderInfo(serviceKey) {
+  modalInfo.innerHTML = '';
+  const src = document.getElementById('info-' + serviceKey);
+  if (!src) {
+    modalInfo.classList.remove('show');
+    return false;
+  }
+  Array.from(src.children).forEach(node => modalInfo.appendChild(node.cloneNode(true)));
+  modalInfo.classList.add('show');
+  return true;
+}
 
 /* サービスカード クリック */
 document.querySelectorAll('.service-item').forEach(item => {
@@ -84,9 +100,17 @@ document.querySelectorAll('.service-item').forEach(item => {
   });
 });
 
+/* 「お役立ち情報を見る」など、任意のボタンからモーダルを開く */
+document.querySelectorAll('[data-open-service]').forEach(btn => {
+  btn.addEventListener('click', () => openModal(btn.dataset.openService));
+});
+
 async function openModal(serviceKey) {
   currentService = serviceKey;
   modalTitle.textContent = SERVICE_LABELS[serviceKey] || serviceKey;
+
+  // サービス別のお役立ち情報（あれば）を表示
+  renderInfo(serviceKey);
 
   // ローディング中はスピナーを表示
   modalGallery.innerHTML = '';
@@ -98,6 +122,7 @@ async function openModal(serviceKey) {
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+  overlay.querySelector('.modal').scrollTop = 0;   // 再表示時は先頭から
 
   await renderGallery();
 }
@@ -120,10 +145,16 @@ async function renderGallery() {
   modalGallery.innerHTML = '';
 
   if (records.length === 0) {
-    modalEmpty.classList.add('show');
+    // お役立ち情報を表示している場合は「まだありません」を出さない
+    if (!modalInfo.classList.contains('show')) modalEmpty.classList.add('show');
     return;
   }
   modalEmpty.classList.remove('show');
+
+  // お役立ち情報がある枠で実績も入った場合はタイトルに「＆実績」を付ける
+  if (modalInfo.classList.contains('show')) {
+    modalTitle.textContent = (SERVICE_LABELS[currentService] || currentService) + '＆実績';
+  }
 
   records.forEach((rec, idx) => {
     modalGallery.appendChild(createGalleryCard(rec, idx));

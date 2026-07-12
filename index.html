@@ -62,7 +62,7 @@
   </script>
 
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css?v=2" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet" />
@@ -316,6 +316,28 @@
         </div>
       </div>
 
+      <!-- ========== 遺品整理お役立ち情報（導入・常時表示／SEO用） ========== -->
+      <div class="ihin-teaser">
+        <div class="ihin-teaser-head">
+          <span class="ihin-teaser-icon">🕯️</span>
+          <h3>遺品整理で家族が困るポイント</h3>
+        </div>
+        <p class="ihin-teaser-lead">
+          大切なご家族を亡くされたあとの遺品整理では、「何から手をつければいいか分からない」「残す物と手放す物の判断がつかない」など、ご家族が戸惑いやすいポイントがいくつもあります。松本市のお片付け本舗松本が、つまずきやすい6つのポイントと対処のヒントをまとめました。
+        </p>
+        <ul class="ihin-teaser-list">
+          <li>何から手をつければいいか分からない</li>
+          <li>残す物・手放す物の判断がつかない</li>
+          <li>大切な書類・貴重品が見つからない</li>
+          <li>時間と体力が足りない</li>
+          <li>供養や処分の仕方が分からない</li>
+          <li>ご近所・ご親族への気づかい</li>
+        </ul>
+        <button type="button" class="btn btn-secondary ihin-teaser-btn" data-open-service="ihin">
+          🕯️ 遺品整理のお役立ち情報を見る
+        </button>
+      </div>
+
       <!-- ========== お客様の声タブ ========== -->
       <div class="voice-section">
         <h3 class="voice-title">
@@ -461,11 +483,83 @@
         <button class="modal-close" id="modal-close" aria-label="閉じる">✕</button>
       </div>
       <div class="modal-body">
+        <!-- サービス別のお役立ち情報（JSでテンプレートを差し込む） -->
+        <div class="modal-info" id="modal-info"></div>
         <div class="modal-gallery" id="modal-gallery">
           <!-- 実績カードがJSで挿入される -->
         </div>
         <div class="modal-empty" id="modal-empty">
           <p>まだ実績が登録されていません。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== モーダル内お役立ち情報（SEOのためDOMに配置。JSで複製して表示） ========== -->
+  <div id="info-ihin" class="service-info" hidden>
+    <div class="ihin-info">
+      <figure class="ihin-info-figure">
+        <img src="images/ihin-column.svg" width="640" height="400" loading="lazy"
+             alt="遺品整理で思い出の品を家族が丁寧に仕分けしているイラスト" />
+        <figcaption class="ihin-info-cap">思い出の品は、ひとつずつ丁寧に。</figcaption>
+      </figure>
+
+      <p class="ihin-info-lead">
+        大切なご家族を亡くされたあと、いざ遺品整理を始めると「思っていたより大変…」というお声をよくいただきます。ここでは、ご家族が実際につまずきやすいポイントと、その対処のヒントをまとめました。
+      </p>
+
+      <ul class="ihin-points">
+        <li class="ihin-point">
+          <span class="ihin-point-num">1</span>
+          <div>
+            <h3>何から手をつければいいか分からない</h3>
+            <p>お部屋いっぱいの品物を前にすると、どこから始めればよいか迷ってしまいます。気持ちの整理もつかず、作業が止まってしまうことも少なくありません。まずは「残す・処分・保留」の3つに大きく分けるところから始めると進めやすくなります。</p>
+          </div>
+        </li>
+        <li class="ihin-point">
+          <span class="ihin-point-num">2</span>
+          <div>
+            <h3>残す物・手放す物の判断がつかない</h3>
+            <p>思い出の品ほど手放しづらく、ご家族の間で意見が分かれてトラブルになりやすいポイントです。判断に迷うものは無理に決めず、一度「保留ボックス」にまとめておくと、あとで落ち着いて話し合えます。</p>
+          </div>
+        </li>
+        <li class="ihin-point">
+          <span class="ihin-point-num">3</span>
+          <div>
+            <h3>大切な書類・貴重品が見つからない</h3>
+            <p>通帳・保険証券・権利書・年金手帳・現金などが家中に分散していることがあります。相続にも関わる大切なものなので、誤って処分しないよう、貴重品は最初に一か所へ集めておくのがおすすめです。</p>
+          </div>
+        </li>
+        <li class="ihin-point">
+          <span class="ihin-point-num">4</span>
+          <div>
+            <h3>時間と体力が足りない</h3>
+            <p>遠方にお住まいだったり、お仕事やご高齢で作業が思うように進まないケースも多いです。とくに賃貸住宅は退去期限があり、間に合わないと家賃が余計にかかってしまうこともあります。</p>
+          </div>
+        </li>
+        <li class="ihin-point">
+          <span class="ihin-point-num">5</span>
+          <div>
+            <h3>供養や処分の仕方が分からない</h3>
+            <p>仏壇・神棚・お人形・お写真などは、どう扱えばよいか迷いがちです。お焚き上げやご供養が必要なものもあるため、専門の窓口に相談すると安心して手放すことができます。</p>
+          </div>
+        </li>
+        <li class="ihin-point">
+          <span class="ihin-point-num">6</span>
+          <div>
+            <h3>ご近所・ご親族への気づかい</h3>
+            <p>大きな家具の搬出や、ご親族への連絡など、周囲への配慮も必要になります。心身ともに負担が大きい作業だからこそ、無理をせず、頼れるところは頼ることも大切です。</p>
+          </div>
+        </li>
+      </ul>
+
+      <div class="ihin-cta">
+        <p>
+          お片付け本舗松本では、故人のお品を大切に仕分け・整理し、買取・ご供養・貴重品の捜索までまとめてサポートいたします。「まず何をすればいい？」というご相談だけでも大歓迎です。
+        </p>
+        <div class="ihin-cta-btns">
+          <a href="tel:0120490530" class="btn btn-primary">📞 無料で相談する</a>
+          <a href="https://line.me/R/ti/p/@371yrdnm" class="btn btn-line" target="_blank" rel="noopener">💬 LINEで相談</a>
         </div>
       </div>
     </div>
@@ -697,6 +791,6 @@
     </div>
   </footer>
 
-  <script src="js/main.js?v=3"></script>
+  <script src="js/main.js?v=6"></script>
 </body>
 </html>
