@@ -22,11 +22,17 @@
   ],
   "hikkoshi": [],
   "cleaning": [],
-  "reform": [
+  "reform": [],
+  "aircon": [
+    {
+      "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/aircon1-before.jpg",
+      "imgAfter": "https://okataduke-matsumoto.com/images/jisseki/aircon1-after.jpg",
+      "comment": "松本市のお客様より、洋室へのエアコン取り付けのご依頼をいただきました。室内機・室外機の設置から配管・真空引き、試運転まで丁寧に対応。お部屋の雰囲気を崩さないよう、すっきりと仕上げました。「これで今年の夏も安心」と喜んでいただけました。松本市でエアコン取付をお探しなら、お片付け本舗松本へ！"
+    },
     {
       "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/1783818118980_IMG_1129.jpeg",
       "imgAfter": "https://okataduke-matsumoto.com/images/jisseki/1783818135263_IMG_1130.jpeg",
-      "comment": "暑い日が続きますね🥵本日は、エアコン取付です。お客様自作の棚につけました。通常貫通孔は、一箇所ですが二箇所の為、少し大変でした。ですが、お客様に大変喜んでいただけ良かったです。エアコンのご用命ありましたら、お片付け本舗松本まで！"
+      "comment": "暑い日が続きますね🥵本日はエアコン取付です。木造のお部屋で壁に取り付け下地がなかったため、お客様自作の棚を活かして設置しました。通常は1か所の貫通穴（壁の穴）が今回は2か所で少し大変でしたが、無事にきれいに取り付け完了！お客様に大変喜んでいただけました。木造・和室で「うちは取付できるのかな？」とお悩みの方も、お片付け本舗松本までお気軽にご相談ください。"
     }
   ]
 }

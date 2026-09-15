@@ -11,11 +11,12 @@ const SERVICE_LABELS = {
   hikkoshi: '🚚 引越し補助・荷物運び ｜ 実績ギャラリー',
   cleaning: '🧹 ハウスクリーニング ｜ 実績ギャラリー',
   reform:   '🏗️ リフォーム ｜ 実績ギャラリー',
+  aircon:   '❄️ エアコン取付・工事 ｜ お役立ち情報',
 };
 
 const SERVICE_ICONS = {
   fuyo: '🗑️', ihin: '🕯️', gomi: '🏚️',
-  benriya: '🔧', hikkoshi: '🚚', cleaning: '🧹', reform: '🏗️',
+  benriya: '🔧', hikkoshi: '🚚', cleaning: '🧹', reform: '🏗️', aircon: '❄️',
 };
 
 /* ---------- 状態 ---------- */
