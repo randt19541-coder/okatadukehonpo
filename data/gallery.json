@@ -27,7 +27,13 @@
   ],
   "hikkoshi": [],
   "cleaning": [],
-  "reform": [],
+  "reform": [
+    {
+      "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/1792407222420_IMG_1472.jpeg",
+      "imgAfter": "https://okataduke-matsumoto.com/images/jisseki/1792407239471_IMG_1483.jpeg",
+      "comment": "本日は、エコキュートの取り替えに伺いました😁同じメーカーでしたので、滞りなく完了しました！\nエアコン工事なども行なってますので、是非お問い合わせください♪"
+    }
+  ],
   "aircon": [
     {
       "imgBefore": "https://okataduke-matsumoto.com/images/jisseki/aircon1-before.jpg",
